@@ -4,7 +4,7 @@ import sampleData from '../assets/data/sampleData.json';
 const DataContext = createContext([]);
 
 const DataProvider = ({ children }) => {
-  const [category, setCategory] = useState("sports");
+  const [category, setCategory] = useState("history");
   const [score, setScore] = useState(0);
   const [questionsData, setQuestionsData] = useState(["aaa"]);
   const [wrongScore, setWrongScore] = useState(0);
