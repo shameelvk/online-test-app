@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { TextField, Button, Typography, MenuItem, Select, FormControl, InputLabel, Grid, Paper } from "@mui/material";
 import { Link, useNavigate } from 'react-router-dom';
 import LoginIcon from "../../assets/images/logo.png";
+import { useData } from '../../context/TestContext';
 
 function Login() {
     const initialValue = { email: "", password: "", category: "" };
     const [loginValues, setLoginValues] = useState(initialValue);
     const [formErrors, setFormErrors] = useState({});
     const navigate = useNavigate();
+    const {setCategory}=useData();
    
     
   
@@ -52,7 +54,8 @@ function Login() {
       const user = existingUsers.find(user => user.email === email && user.password === password);
 
       if (user) {
-        navigate('/test', { state: { category: loginValues.category } });
+        setCategory(loginValues.category)
+        navigate('/test');
       } else {
         setFormErrors({ auth: "Invalid credentials" });
       }

@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Grid, Typography, TextareaAutosize, Paper, Radio, RadioGroup, FormControlLabel, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
-import WarningIcon from '@mui/icons-material/Warning';
-import CloseIcon from '@mui/icons-material/Close';;
+import { useNavigate } from 'react-router-dom'; // Import useNavigate from react-router-dom
 import { useData } from '../../context/TestContext';
-import { Link } from 'react-router-dom';
+import ExitDialog from '../../components/ExitDialog/ExitDialog';
 
 const Test = () => {
+  const navigate = useNavigate(); 
   const {
-    category,
-    setCategory,
     score,
     setScore,
     questionsData,
@@ -22,15 +20,26 @@ const Test = () => {
   const [selectedOption, setSelectedOption] = useState('');
   const [currentQuesIndex, setCurrentQuesIndex] = useState(0);
   const [isOptionClicked, setIsOptionClicked] = useState(false);
-  const [openDialog, setOpenDialog] = useState(false); // State to manage dialog open/close
+  const [openDialog, setOpenDialog] = useState(false); 
 
   useEffect(() => {
     const countdown = setInterval(() => {
-      setTimer(prev => (prev > 0 ? prev - 1 : 0));
+      setTimer(prev => {
+        if (prev > 0) return prev - 1;
+        clearInterval(countdown);
+        handleTestCompletion();
+        return 0;
+      });
     }, 1000);
 
+    if (currentQuesIndex === questionsData.length) {
+      handleTestCompletion();
+    }
+
     return () => clearInterval(countdown);
-  }, []);
+  }, [currentQuesIndex]);
+
+ 
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
@@ -46,27 +55,26 @@ const Test = () => {
   const handleNextBtn = () => {
     const currentQuestion = questionsData[currentQuesIndex];
     if (selectedOption) {
-      if (selectedOption == currentQuestion.correct_option) {
+      if (selectedOption === currentQuestion.correct_option) {
         setScore(score + 1);
       } else {
         setWrongScore(wrongScore + 1);
       }
     }
 
-    const nextQuestion = currentQuesIndex + 1;
-    if (nextQuestion < questionsData.length) {
-      setCurrentQuesIndex(nextQuestion);
-    } else {
-      // showResult(true);  // You need to implement the logic to show the result
-    }
-
-    if (isOptionClicked) {
-      setIsOptionClicked(false);
-    } else {
+    if (!isOptionClicked) {
       setSkippedScore(skippedScore + 1);
     }
 
+    const nextQuestion = currentQuesIndex + 1;
+    setCurrentQuesIndex(nextQuestion);
     setSelectedOption('');
+    setIsOptionClicked(false);
+  };
+
+  const handleTestCompletion = () => {
+    setSkippedScore(skippedScore + questionsData.length - currentQuesIndex);
+    navigate('/result'); 
   };
 
   const handleOpenDialog = () => {
@@ -78,7 +86,7 @@ const Test = () => {
   };
 
   const handleContinue = () => {
-    // Logic to handle exam submission
+    handleTestCompletion();
     setOpenDialog(false);
   };
 
@@ -123,35 +131,9 @@ const Test = () => {
           </Grid>
         </Grid>
       </Grid>
-
-      <Dialog open={openDialog} onClose={handleCloseDialog} >
-        <DialogTitle>
-          <Box sx={{display:"flex", flexDirection:"column", alignItems: 'center', gap: 1,justifyContent:"center" }}>
-            <WarningIcon fontSize='large' color="error" />
-            <Typography variant="h6" color="error">Warning</Typography>
-            <IconButton
-              aria-label="close"
-              onClick={handleCloseDialog}
-              sx={{
-                position: 'absolute',
-                right: 8,
-                top: 8,
-                color: (theme) => theme.palette.grey[500],
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body1">Are you sure you want to submit the exam?</Typography>
-        </DialogContent>
-        <DialogActions >
-          <Link to={'/'} style={{width:"100%"}}>
-          <Button  variant="contained" color="primary" sx={{width:"100%"}}>Continue</Button>
-          </Link>
-           </DialogActions>
-      </Dialog>
+      {openDialog && (
+        <ExitDialog handleCloseDialog={handleCloseDialog} openDialog={openDialog} handleContinue={handleContinue} />
+      )}
     </Box>
   );
 };
